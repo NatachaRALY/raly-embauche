@@ -1,0 +1,5 @@
+config.json
+soumissions/
+__pycache__/
+*.pyc
+.env

@@ -8,10 +8,95 @@ import json
 import uuid
 import smtplib
 import mimetypes
+import requests
 from email.message import EmailMessage
 from datetime import datetime
 from pathlib import Path
 import base64
+
+ASANA_PROJECT_GID = "1213986643545923"
+ASANA_API_URL     = "https://app.asana.com/api/1.0/tasks"
+
+
+def get_asana_token() -> str:
+    try:
+        return st.secrets["asana_token"]
+    except Exception:
+        return ""
+
+
+def create_asana_task(data: dict) -> tuple[bool, str]:
+    token = get_asana_token()
+    if not token:
+        return False, "Token Asana manquant"
+
+    def v(k): return str(data.get(k, "") or "—")
+
+    horaires_txt = ""
+    for jour, h in (data.get("horaires") or {}).items():
+        horaires_txt += f"\n  {jour} : {h.get('de1','')}–{h.get('a1','')} / {h.get('de2','')}–{h.get('a2','')}"
+
+    notes = f"""📋 Référence : {v('id')} — reçu le {v('soumis_le')}
+
+🏢 ENTREPRISE
+• Entreprise : {v('entreprise')}
+• SIRET : {v('siret')}
+• DPAE à établir : {v('dpae')}
+• Contrat à établir : {v('contrat_a_etablir')}
+
+👤 SALARIÉ
+• Nom : {v('prenom')} {v('nom')}
+• Nom de naissance : {v('nom_naissance')}
+• Date de naissance : {v('date_naissance')}
+• Lieu de naissance : {v('lieu_naissance')} ({v('pays_naissance')})
+• Nationalité : {v('nationalite')}
+• N° SS : {v('nss')}
+• Titre de séjour : {v('titre_sejour')}
+• Situation familiale : {v('situation_familiale')}
+• Email : {v('email')}
+• Adresse : {v('adresse_numero')} {v('adresse_complement')}, {v('code_postal')} {v('ville')}
+
+📅 CONTRAT
+• Date d'embauche : {v('date_embauche')} {v('heure_embauche')}
+• Type : {v('type_contrat')}
+• Date fin CDD : {v('date_fin_cdd')}
+• Motif CDD : {v('motif_cdd')}
+• Salarié remplacé : {v('salarie_remplace')}
+• Heures/semaine : {v('nb_heures')}{horaires_txt}
+
+💼 POSTE & RÉMUNÉRATION
+• Emploi : {v('emploi')} ({v('categorie')})
+• Convention collective : {v('convention')}
+• Coefficient : {v('coefficient')}
+• Salaire brut : {v('salaire')} €
+• Autres rémunérations : {v('autres_remun')}
+• Clauses : {v('clauses')}
+
+🏥 AVANTAGES
+• Mutuelle : {v('mutuelle')} — Option : {v('option_mutuelle')}
+• Transport : {v('transport')}
+"""
+
+    payload = {
+        "data": {
+            "name": f"Embauche — {v('prenom')} {v('nom')} ({v('entreprise')}) · {v('date_embauche')}",
+            "notes": notes,
+            "projects": [ASANA_PROJECT_GID],
+        }
+    }
+
+    try:
+        r = requests.post(
+            ASANA_API_URL,
+            json=payload,
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=15,
+        )
+        if r.status_code == 201:
+            return True, "ok"
+        return False, r.text
+    except Exception as e:
+        return False, str(e)
 
 LOGO_PATH = Path(__file__).parent / "logo.png"
 
@@ -194,7 +279,8 @@ with st.form("formulaire_embauche", clear_on_submit=True):
     with col1:
         nom         = st.text_input("Nom *")
         nom_naiss   = st.text_input("Nom de naissance", help="Obligatoire pour la sécurité sociale")
-        date_naiss  = st.date_input("Date de naissance *", value=None, format="DD/MM/YYYY")
+        date_naiss  = st.date_input("Date de naissance *", value=None, format="DD/MM/YYYY",
+                                    min_value=datetime(1900, 1, 1).date(), max_value=datetime.now().date())
         pays_naiss  = st.text_input("Pays de naissance", placeholder="France")
         nationalite = st.text_input("Nationalité", placeholder="Française")
     with col2:
@@ -390,12 +476,18 @@ if submitted:
         }
 
         with st.spinner("Envoi en cours..."):
-            ok, msg = send_email(data, fichiers_uploades)
+            ok, msg = create_asana_task(data)
 
         if ok:
-            st.success(f"✅ Formulaire soumis avec succès ! Référence : **{ref}**")
             st.balloons()
-            st.info("Raly Conseils a bien reçu votre fiche. Votre gestionnaire prendra en charge l'embauche.")
+            st.markdown("""
+            <div style="background:#e8f5e9;border:2px solid #789F90;border-radius:10px;padding:24px;text-align:center;margin-top:16px;">
+                <div style="font-size:2rem;">✅</div>
+                <div style="font-size:1.3rem;font-weight:700;color:#3F4443;margin:8px 0;">Formulaire envoyé avec succès !</div>
+                <div style="color:#789F90;font-size:1rem;">Référence : <strong>{ref}</strong></div>
+                <div style="color:#555;margin-top:12px;">Raly Conseils a bien reçu votre fiche.<br>Votre gestionnaire prendra en charge l'embauche dans les meilleurs délais.</div>
+            </div>
+            """.replace("{ref}", ref), unsafe_allow_html=True)
         else:
             st.error(f"Erreur lors de l'envoi : {msg}")
-            st.warning("Merci de contacter Raly Conseils directement.")
+            st.warning("Merci de contacter Raly Conseils directement : natacha@ralyconseils.com")

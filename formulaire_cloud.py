@@ -435,13 +435,18 @@ with st.form("formulaire_embauche", clear_on_submit=True):
 # ── Traitement ─────────────────────────────────────────────────────────────────
 if submitted:
     errors = []
-    if not entreprise.strip(): errors.append("Entreprise")
-    if not nom.strip():        errors.append("Nom")
-    if not prenom.strip():     errors.append("Prénom")
-    if not date_embauche:      errors.append("Date d'embauche")
+    if not entreprise.strip():  errors.append("Entreprise")
+    if not nom.strip():         errors.append("Nom")
+    if not prenom.strip():      errors.append("Prénom")
+    if not date_naiss:          errors.append("Date de naissance")
+    if not date_embauche:       errors.append("Date d'embauche")
+    if not nb_heures.strip():   errors.append("Nombre d'heures par semaine")
+    if not emploi.strip():      errors.append("Emploi occupé")
+    if not convention.strip():  errors.append("Convention collective")
+    if not salaire.strip():     errors.append("Salaire brut mensuel")
 
     if errors:
-        st.error(f"Champs obligatoires manquants : {', '.join(errors)}")
+        st.error("⚠️ Merci de remplir les champs obligatoires suivants : **" + "**, **".join(errors) + "**")
     else:
         ref = str(uuid.uuid4())[:8].upper()
         data = {

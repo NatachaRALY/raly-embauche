@@ -17,57 +17,6 @@ import base64
 ASANA_PROJECT_GID = "1213986643545923"
 ASANA_API_URL     = "https://app.asana.com/api/1.0/tasks"
 
-# ── Mot de passe d'accès ───────────────────────────────────────────────────────
-def check_password() -> bool:
-    """Affiche une page de connexion et retourne True si le mot de passe est correct."""
-    if st.session_state.get("authentifie"):
-        return True
-
-    st.markdown("""
-    <style>
-    :root { --vert:#789F90; --gris:#3F4443; }
-    .stApp { background-color:#F8F9F8; }
-    [data-testid="stSidebar"] { display:none; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Logo
-    logo_path = Path(__file__).parent / "logo.png"
-    if logo_path.exists():
-        import base64 as _b64
-        b64 = _b64.b64encode(logo_path.read_bytes()).decode()
-        st.markdown(f"""
-        <div style="text-align:center;padding:48px 0 16px;">
-            <div style="display:inline-block;background:white;border-radius:8px;padding:12px 24px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
-                <img src="data:image/png;base64,{b64}" style="height:60px;">
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="max-width:380px;margin:0 auto;text-align:center;padding-bottom:8px;">
-        <div style="font-size:1.4rem;font-weight:700;color:#3F4443;">Accès sécurisé</div>
-        <div style="color:#789F90;font-size:0.95rem;margin-top:4px;">Formulaire d'embauche · Raly Conseils</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col_l, col_c, col_r = st.columns([1, 2, 1])
-    with col_c:
-        pwd = st.text_input("Code d'accès", type="password", placeholder="Entrez votre code d'accès")
-        if st.button("Accéder au formulaire", use_container_width=True, type="primary"):
-            mot_de_passe = st.secrets.get("form_password", "")
-            if pwd == mot_de_passe and mot_de_passe:
-                st.session_state["authentifie"] = True
-                st.rerun()
-            else:
-                st.error("Code incorrect. Contactez Raly Conseils pour obtenir votre accès.")
-        st.markdown("""
-        <div style="text-align:center;margin-top:16px;font-size:0.8rem;color:#aaa;">
-            Accès réservé aux entreprises clientes de Raly Conseils
-        </div>
-        """, unsafe_allow_html=True)
-    return False
-
 
 def get_asana_token() -> str:
     try:
@@ -330,10 +279,6 @@ def send_email(data: dict, fichiers_uploades: dict) -> tuple[bool, str]:
     except Exception as e:
         return False, str(e)
 
-
-# ── Vérification mot de passe ─────────────────────────────────────────────────
-if not check_password():
-    st.stop()
 
 # ── Formulaire ─────────────────────────────────────────────────────────────────
 with st.form("formulaire_embauche", clear_on_submit=True):

@@ -94,11 +94,31 @@ def create_asana_task(data: dict) -> tuple[bool, str]:
             headers={"Authorization": f"Bearer {token}"},
             timeout=15,
         )
-        if r.status_code == 201:
-            return True, "ok"
-        return False, r.text
+        if r.status_code != 201:
+            return False, r.text
+        task_gid = r.json()["data"]["gid"]
+        return True, task_gid
     except Exception as e:
         return False, str(e)
+
+
+def upload_attachment(token: str, task_gid: str, filename: str, content: bytes) -> str:
+    """Envoie un fichier comme pièce jointe sur la tâche Asana. Retourne "" si ok, sinon le message d'erreur."""
+    try:
+        r = requests.post(
+            "https://app.asana.com/api/1.0/attachments",
+            headers={"Authorization": f"Bearer {token}"},
+            files={
+                "parent": (None, task_gid),
+                "file":   (filename, content),
+            },
+            timeout=30,
+        )
+        if r.status_code == 200 or r.status_code == 201:
+            return ""
+        return f"{filename}: {r.status_code} {r.text[:200]}"
+    except Exception as e:
+        return f"{filename}: {e}"
 
 LOGO_PATH = Path(__file__).parent / "logo.png"
 
@@ -478,9 +498,20 @@ if submitted:
         }
 
         with st.spinner("Envoi en cours..."):
-            ok, msg = create_asana_task(data)
+            ok, task_gid = create_asana_task(data)
+            upload_errors = []
+            if ok:
+                token = get_asana_token()
+                for label, fichiers in fichiers_uploades.items():
+                    for f in (fichiers or []):
+                        contenu = f.read()
+                        err = upload_attachment(token, task_gid, f"{label}_{f.name}", contenu)
+                        if err:
+                            upload_errors.append(err)
 
         if ok:
+            if upload_errors:
+                st.warning("Documents : " + " | ".join(upload_errors))
             st.balloons()
             st.markdown("""
             <div style="background:#e8f5e9;border:2px solid #789F90;border-radius:10px;padding:24px;text-align:center;margin-top:16px;">

@@ -75,7 +75,9 @@ def create_asana_task(data: dict) -> tuple[bool, str]:
 🏥 AVANTAGES
 • Mutuelle : {v('mutuelle')} — Option : {v('option_mutuelle')}
 • Transport : {v('transport')}
-"""
+
+---JSON---
+""" + json.dumps(data, ensure_ascii=False)
 
     payload = {
         "data": {

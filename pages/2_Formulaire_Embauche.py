@@ -21,6 +21,26 @@ with st.sidebar:
     st.divider()
     st.info("Remplissez ce formulaire et cliquez sur **Soumettre**.\n\nVos informations seront transmises à Raly Conseils.")
 
+# ── Encart lien client ─────────────────────────────────────────────────────────
+LIEN_CLIENT = "https://raly-embauche-2bkvn2ahjmqlxvybxhg3aq.streamlit.app/"
+TEXTE_EMAIL = f"""Bonjour,
+
+Afin de préparer l'embauche de votre nouveau salarié, merci de bien vouloir compléter le formulaire en ligne via le lien ci-dessous :
+
+{LIEN_CLIENT}
+
+⚠️ Si la page affiche un message de mise en veille, cliquez sur le bouton pour la réactiver — elle sera prête en 30 secondes.
+
+N'hésitez pas à nous contacter pour toute question.
+
+Cordialement,
+Raly Conseils"""
+
+st.markdown("### 📨 Lien formulaire client")
+st.caption("Copiez ce texte et collez-le directement dans votre email.")
+st.code(TEXTE_EMAIL, language=None)
+st.divider()
+
 # ── En-tête ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div style="text-align:center;padding:24px 0 8px;">

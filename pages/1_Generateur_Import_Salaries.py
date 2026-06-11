@@ -275,11 +275,20 @@ def extract_with_claude(text: str, files_data: list, api_key: str) -> dict:
         "text": EXTRACTION_PROMPT.format(text=text or "(voir les documents joints)"),
     })
 
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=2000,
-        messages=[{"role": "user", "content": content}],
-    )
+    has_pdfs = any(f["media_type"] == "application/pdf" for f in files_data)
+    if has_pdfs:
+        response = client.beta.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": content}],
+            betas=["pdfs-2024-09-25"],
+        )
+    else:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": content}],
+        )
 
     raw = response.content[0].text.strip()
 

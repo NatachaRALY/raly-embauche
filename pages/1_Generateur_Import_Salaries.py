@@ -276,7 +276,7 @@ def extract_with_claude(text: str, files_data: list, api_key: str) -> dict:
     })
 
     response = client.messages.create(
-        model="claude-opus-4-6",
+        model="claude-sonnet-4-6",
         max_tokens=2000,
         messages=[{"role": "user", "content": content}],
     )

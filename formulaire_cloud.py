@@ -527,5 +527,5 @@ if submitted:
             </div>
             """.replace("{ref}", ref), unsafe_allow_html=True)
         else:
-            st.error(f"Erreur lors de l'envoi : {msg}")
+            st.error(f"Erreur lors de l'envoi : {task_gid}")
             st.warning("Merci de contacter Raly Conseils directement : natacha@ralyconseils.com")

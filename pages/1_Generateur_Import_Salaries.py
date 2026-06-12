@@ -278,14 +278,14 @@ def extract_with_claude(text: str, files_data: list, api_key: str) -> dict:
     has_pdfs = any(f["media_type"] == "application/pdf" for f in files_data)
     if has_pdfs:
         response = client.beta.messages.create(
-            model="claude-sonnet-4-6",
+            model="claude-fable-5",
             max_tokens=2000,
             messages=[{"role": "user", "content": content}],
             betas=["pdfs-2024-09-25"],
         )
     else:
         response = client.messages.create(
-            model="claude-sonnet-4-6",
+            model="claude-fable-5",
             max_tokens=2000,
             messages=[{"role": "user", "content": content}],
         )

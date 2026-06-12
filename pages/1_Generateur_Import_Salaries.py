@@ -290,7 +290,10 @@ def extract_with_claude(text: str, files_data: list, api_key: str) -> dict:
             messages=[{"role": "user", "content": content}],
         )
 
-    raw = response.content[0].text.strip()
+    # Concaténer tous les blocs texte (la réponse peut contenir des blocs sans texte)
+    raw = "".join((getattr(b, "text", None) or "") for b in response.content).strip()
+    if not raw:
+        raise ValueError("Réponse vide du modèle — réessayez.")
 
     # Nettoyer les blocs de code éventuels
     if "```json" in raw:

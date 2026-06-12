@@ -123,7 +123,7 @@ Réponds UNIQUEMENT avec un tableau JSON valide :
                 model="claude-fable-5", max_tokens=4000,
                 messages=[{"role": "user", "content": content}],
             )
-        raw = resp.content[0].text.strip()
+        raw = "".join((getattr(b, "text", None) or "") for b in resp.content).strip()
         if "```json" in raw:
             raw = raw.split("```json")[1].split("```")[0].strip()
         elif "```" in raw:
@@ -359,7 +359,7 @@ Réponds UNIQUEMENT avec un tableau JSON :
                 model="claude-fable-5", max_tokens=4000,
                 messages=[{"role": "user", "content": content}],
             )
-        raw = resp.content[0].text.strip()
+        raw = "".join((getattr(b, "text", None) or "") for b in resp.content).strip()
         if "```json" in raw:
             raw = raw.split("```json")[1].split("```")[0].strip()
         elif "```" in raw:
